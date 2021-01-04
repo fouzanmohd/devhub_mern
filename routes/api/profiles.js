@@ -44,20 +44,20 @@ router.post("/", [
       facebook,
       instagram,
       twitter,
-    } = req.body; 
+    } = req.body;
 
     //Building profile section
 
-    const profileSection = {}
+    const profileSection = {};
     profileSection.user = req.user.id;
-    if (company) profileSection.company = company
-    if (website) profileSection.website = website
-    if (location) profileSection.location = location
-    if (bio) profileSection.bio = bio
-    if (githubusername) profileSection.githubusername = githubusername
-    if (status) profileSection.status = status
-    if (skills){
-      profileSection.skills = skills.split(',').map(skill=>skill.trim())
+    if (company) profileSection.company = company;
+    if (website) profileSection.website = website;
+    if (location) profileSection.location = location;
+    if (bio) profileSection.bio = bio;
+    if (githubusername) profileSection.githubusername = githubusername;
+    if (status) profileSection.status = status;
+    if (skills) {
+      profileSection.skills = skills.split(",").map((skill) => skill.trim());
     }
 
     //Building experience section
@@ -68,28 +68,30 @@ router.post("/", [
     // if (from) profileSection.experience.from = from
     // if (to) profileSection.experience.to = to
 
-    profileSection.social = {}
-    if (youtube) profileSection.social.youtube = youtube
-    if (twitter) profileSection.social.twitter = twitter
-    if (facebook) profileSection.social.facebook = facebook
-    if (instagram) profileSection.social.instagram = instagram
+    profileSection.social = {};
+    if (youtube) profileSection.social.youtube = youtube;
+    if (twitter) profileSection.social.twitter = twitter;
+    if (facebook) profileSection.social.facebook = facebook;
+    if (instagram) profileSection.social.instagram = instagram;
 
+    try {
+      let profile = await Profile.findOne({ user: req.user.id });
 
-    try{
-      let profile = await Profile.findOne({user: req.user.id})
-
-      if (profile){
-        profile = await Profile.findOneAndUpdate({user:req.user.id}, {$set: profileSection}, {new:true})
-        return res.send(profile)
+      if (profile) {
+        profile = await Profile.findOneAndUpdate(
+          { user: req.user.id },
+          { $set: profileSection },
+          { new: true }
+        );
+        return res.send(profile);
       }
 
-      profile = new Profile(profileSection)
-      profile.save()
-      res.json(profile)
-
-    }catch(err){
-      console.error(error)
-      res.status(500).json({message: "server error"})
+      profile = new Profile(profileSection);
+      profile.save();
+      res.json(profile);
+    } catch (err) {
+      console.error(error);
+      res.status(500).json({ message: "server error" });
     }
   },
 ]);
@@ -97,17 +99,38 @@ router.post("/", [
 // Get All Profiles
 // @route api/profiles
 
-router.get('/', async (req,res)=>{
+router.get("/", async (req, res) => {
   try {
-    const profiles = await Profile.find().populate('user', ['avatar', 'name'])
-    if (profiles.length==0){
-      return res.status(400).json({message: "There is no profiles available"})
+    const profiles = await Profile.find().populate("user", ["avatar", "name"]);
+    if (profiles.length == 0) {
+      return res
+        .status(400)
+        .json({ message: "There is no profiles available" });
     }
-    res.status(400).json(profiles)
+    res.status(400).json(profiles);
   } catch (error) {
-    console.error(error.message)
-    res.status(500).send('Server error!')
+    console.error(error.message);
+    res.status(500).send("Server error!");
   }
-})
+});
+
+//get profile using profile id
+//@route api/profiles/user/?profile_id
+
+router.get("/user/:user_id", async (req, res) => {
+  try {
+    const profile = await Profile.findOne({
+      user: req.params.user_id,
+    }).populate("user", ["name", "avatar"]);
+    if (!profile)
+      return res
+        .status(400)
+        .json({ message: "There is no profile for this user" });
+    res.json(profile);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json("Server error");
+  }
+});
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const config = require("config");
+const router = require("../routes/api/profiles");
 const db = config.get("mongoURI");
 
 const connectDB = async () => {
@@ -8,10 +9,10 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useCreateIndex: true,
-      useFindAndModify:false
+      useFindAndModify: false,
     });
     console.log("Connected to MongoDB database successfully!");
-  } catch(err) {
+  } catch (err) {
     console.log(err);
     process.exit(1);
   }
