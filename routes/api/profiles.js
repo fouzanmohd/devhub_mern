@@ -21,6 +21,7 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
+// @route POST api/profiles
 //Creating a user profile
 
 router.post("/", [
@@ -60,12 +61,12 @@ router.post("/", [
     }
 
     //Building experience section
-    profileSection.experience = {}
-    if (title) profileSection.experience.title = title
-    if (company) profileSection.experience.company = company
-    if (locataion) profileSection.experience.locataion = locataion
-    if (from) profileSection.experience.from = from
-    if (to) profileSection.experience.to = to
+    // profileSection.experience = {}
+    // if (title) profileSection.experience.title = title
+    // if (company) profileSection.experience.company = company
+    // if (locataion) profileSection.experience.locataion = locataion
+    // if (from) profileSection.experience.from = from
+    // if (to) profileSection.experience.to = to
 
     profileSection.social = {}
     if (youtube) profileSection.social.youtube = youtube
@@ -75,7 +76,7 @@ router.post("/", [
 
 
     try{
-      let profile = await User.findOne({user: req.user.id})
+      let profile = await Profile.findOne({user: req.user.id})
 
       if (profile){
         profile = await Profile.findOneAndUpdate({user:req.user.id}, {$set: profileSection}, {new:true})
@@ -84,6 +85,7 @@ router.post("/", [
 
       profile = new Profile(profileSection)
       profile.save()
+      res.json(profile)
 
     }catch(err){
       console.error(error)
@@ -91,5 +93,21 @@ router.post("/", [
     }
   },
 ]);
+
+// Get All Profiles
+// @route api/profiles
+
+router.get('/', async (req,res)=>{
+  try {
+    const profiles = await Profile.find().populate('user', ['avatar', 'name'])
+    if (profiles.length==0){
+      return res.status(400).json({message: "There is no profiles available"})
+    }
+    res.status(400).json(profiles)
+  } catch (error) {
+    console.error(error.message)
+    res.status(500).send('Server error!')
+  }
+})
 
 module.exports = router;
