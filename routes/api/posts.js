@@ -56,8 +56,8 @@ route.get("/", auth, async (req, res) => {
 route.get("/:id", auth, async (req, res) => {
   try {
     const post = await Posts.findById(req.params.id);
-    if (!post){
-      res.status(404).json({message: "Post not found"})
+    if (!post) {
+      res.status(404).json({ message: "Post not found" });
     }
     res.json(post);
   } catch (error) {
@@ -69,17 +69,19 @@ route.get("/:id", auth, async (req, res) => {
   }
 });
 
-route.delete('/:id',auth, async(req,res)=>{
+route.delete("/:id", auth, async (req, res) => {
   try {
-    const post = await Posts.findById(req.params.id)
-    if (!post){
-      return res.status(404).json({message: "No such post exist!"})
+    const post = await Posts.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "No such post exist!" });
     }
-    if (post.user.toString()!==req.user.id){
-      res.status(500).json({message: "No authorization to perform this action"})
+    if (post.user.toString() !== req.user.id) {
+      res
+        .status(500)
+        .json({ message: "No authorization to perform this action" });
     }
-    await post.delete()
-    res.json("Post deleted successfully!")
+    await post.delete();
+    res.json("Post deleted successfully!");
   } catch (error) {
     console.error(error.message);
     if (error.kind === "ObjectId") {
@@ -87,5 +89,43 @@ route.delete('/:id',auth, async(req,res)=>{
     }
     res.status(500).send("Server error");
   }
-})
+});
+
+route.put("/like/:id", auth, async (req, res) => {
+  try {
+    const post = await Posts.findById(req.params.id);
+    const userLiked =
+      post.likes.filter((like) => like.user.toString() === req.user.id).length >
+      0;
+    if (userLiked) {
+      res.status(400).json({ message: "Post has been liked already." });
+    }
+    post.likes.unshift({ user: req.user.id });
+    res.json("Post liked!");
+    await post.save();
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Server error");
+  }
+});
+
+route.put("/unlike/:id", auth, async (req, res) => {
+  try {
+    const post = await Posts.findById(req.params.id);
+    const userLikes = post.likes.filter(
+      (like) => like.user.toString() === req.user.id
+    ).length;
+    if (userLikes === 0) {
+      res.status(400).json({ message: "Post has not yet liked" });
+    }
+    const removeIndex = post.likes
+      .map((like) => like.user.toString())
+      .indexOf(req.user.id);
+    post.likes.splice(removeIndex, 1);
+    await post.save();
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Server error");
+  }
+});
 module.exports = route;
