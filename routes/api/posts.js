@@ -1,9 +1,6 @@
 const express = require("express");
 const route = express.Router();
-const {
-  check,
-  validationResult,
-} = require("express-validator");
+const { check, validationResult } = require("express-validator");
 
 //middleware
 const auth = require("../../middleware/auth");
@@ -12,7 +9,6 @@ const auth = require("../../middleware/auth");
 const User = require("../../models/User");
 const Profile = require("../../models/Profile");
 const Posts = require("../../models/Posts");
-const router = require("./auth");
 
 // @route GET api/posts
 route.post(
@@ -148,7 +144,7 @@ route.post(
       };
       post.comments.unshift(newComment);
       await post.save();
-      return res.json(post.comments)
+      return res.json(post.comments);
     } catch (error) {
       console.error(error.message);
       res.status(500).send("Server error");
@@ -156,25 +152,30 @@ route.post(
   }
 );
 
-route.delete('/comment/:id/:commentid', auth, async(req,res)=>{
+route.delete("/comment/:id/:commentid", auth, async (req, res) => {
   try {
-    const post = await Posts.findById(req.params.id)
-    const comment = post.comments.find(comment=>comment.id ===req.params.commentid)
-    if (!comment){
-      return res.status(404).json({message: "Comment does not exist"})
+    const post = await Posts.findById(req.params.id);
+    const comment = post.comments.find(
+      (comment) => comment.id === req.params.commentid
+    );
+    if (!comment) {
+      return res.status(404).json({ message: "Comment does not exist" });
     }
-    if (comment.user.toString()!==req.user.id){
-      return res.status(401).json({message: "user not authorized to delete this comment"})
+    if (comment.user.toString() !== req.user.id) {
+      return res
+        .status(401)
+        .json({ message: "user not authorized to delete this comment" });
     }
-    const removeIndex = post.comments.map(comment=>comment.id.toString()).indexOf(req.params.commentid)
-    console.log(removeIndex)
-    post.comments.splice(removeIndex, 1)
+    const removeIndex = post.comments
+      .map((comment) => comment.id.toString())
+      .indexOf(req.params.commentid);
+    console.log(removeIndex);
+    post.comments.splice(removeIndex, 1);
     await post.save();
-    res.json(post.comments)
-    
+    res.json(post.comments);
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Server error");
   }
-})
+});
 module.exports = route;
